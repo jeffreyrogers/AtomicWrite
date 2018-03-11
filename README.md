@@ -42,15 +42,14 @@ going on. But the basic overview is as follows and is the same on every OS.
 1. Create a temporary file
 2. Write all data to the temporary file
 3. Flush changes to disk
-4. Rename the temporary file (this step is atomic)
+4. Rename the temporary file (this step is atomic at the filesystem level)
 5. Flush changes to disk
 
 The operations are the same between Windows and POSIX systems, but Windows
 provides slightly weaker guarantees (it should still be atomic, but some
-metadata might not be written properly in the case of a crash)
-We do these same operations on Windows as well, but it provides slightly
-different guarantees. The code is slightly different depending on the POSIX
-system, but the basic idea is the same for all of them.
+metadata might not be written properly in the case of a crash). The code is
+slightly different depending on the POSIX system, but the basic idea is the same
+for all of them.
 
 ## Large Files
 
@@ -60,7 +59,7 @@ provide these same guarantees for large files. The problem is more difficult
 than it appears because most filesystems do not provide the guarantees we would
 need to write similar code that works for large files. If you control the
 systems your application runs on your best bet is to use a filesystem that
-provide the guarantees you need.
+provides the guarantees you need.
 
 ## Why AtomicWrite Throws Exceptions
 
