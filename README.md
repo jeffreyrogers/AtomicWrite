@@ -23,16 +23,17 @@ exception if an irrecoverable error is encountered.
 
 | OS		| Supported	|
 | ------------- | ------------- |
-| Linux		| Untested	|
+| Linux		| Yes		|
+| OS X		| Yes		|
 | OpenBSD	| Untested	|
 | FreeBSD	| Untested	|
 | NetBSD	| Untested	|
 | Dragonfly BSD	| Untested	|
-| OS X		| Yes		|
 | Windows	| Unimplemented |
 
 The BSD code is the same as Linux, so it should work in theory, but I have not
-actually run it to see.
+actually run it to see. Some headers may need to be added to get it to compile
+properly.
 
 ## Description of Implementation
 

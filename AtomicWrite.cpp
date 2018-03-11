@@ -2,6 +2,11 @@
 
 #include "AtomicWrite.h"
 
+#if defined(__linux__)
+	#include <stdio.h>
+	#include <string.h>
+	#include <stdlib.h>
+#endif
 #if defined(__APPLE__)
 	// We include unistd here so it is not affected by the redefinition of
 	// fsync below
