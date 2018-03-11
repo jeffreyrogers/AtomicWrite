@@ -41,19 +41,13 @@
 	make_temporary_file(std::string fname)
 	{
 		fname.append(".XXXXXX");
-		int fd;
 		size_t size = fname.size();
 		char *tmp = new char[size + 1];
 		memcpy(tmp, fname.c_str(), size + 1);
-		while (true) {
-			tmp = mktemp(tmp);
-			fd = open(tmp, O_WRONLY | O_CREAT | O_EXCL);
-			if (fd == -1 && errno != EEXIST) {
-				delete[] tmp;
-				throw AtomicWrite::FailedAtomicWrite();
-			} else {
-				break;
-			}
+		int fd = mkstemp(tmp);
+		if (fd == -1) {
+			delete[] tmp;
+			throw AtomicWrite::FailedAtomicWrite();
 		}
 		std::string tmpname(tmp);
 		delete[] tmp;
@@ -117,7 +111,8 @@
 	static void
 	rename_file(std::string oldname, std::string newname)
 	{
-		// TODO
+		// TODO should use replace file, but remember that the file to
+		// be replaced must exist already (I think)
 	}
 
 	static int
