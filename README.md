@@ -44,13 +44,14 @@ going on. But the basic overview is as follows and is the same on every OS.
 2. Write all data to the temporary file
 3. Flush changes to disk
 4. Rename the temporary file (this step is atomic at the filesystem level)
-5. Flush changes to disk
+5. Flush changes to directory entry to disk (not necessary on Windows)
 
-The operations are the same between Windows and POSIX systems, but Windows
-provides slightly weaker guarantees (it should still be atomic, but some
-metadata might not be written properly in the case of a crash). The code is
-slightly different depending on the POSIX system, but the basic idea is the same
-for all of them.
+The operations are the same between Windows and POSIX systems (except for
+the final one because of differences between how filesystems are implemented on
+Windows and POSIX sysems), but Windows provides slightly weaker guarantees (it
+should still be atomic, but some metadata might not be written properly in the
+case of a crash). The code is slightly different depending on the POSIX system,
+but the basic idea is the same for all of them.
 
 ## Large Files
 
