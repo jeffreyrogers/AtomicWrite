@@ -83,7 +83,10 @@
 	}
 
 #elif defined(_WIN32)
+	#include <Windows.h>
 	#include <io.h>
+	#include <fcntl.h>
+	#include <sys/stat.h>
 
 	static void
 	sync(int fd)
@@ -96,7 +99,7 @@
 	write_out(int fd, std::string data)
 	{
 		int err = _write(fd, data.c_str(), data.length());
-		if (err) throw AtomicWrite::FailedAtomicWrite();
+		if (err == -1) throw AtomicWrite::FailedAtomicWrite();
 	}
 
 	static void
@@ -109,27 +112,63 @@
 	static std::pair<int, std::string>
 	make_temporary_file(std::string fname)
 	{
-		// TODO
+		fname.append("XXXXXX");
+		size_t size = fname.size();
+		char *tmp = new char[size + 1];
+		memcpy(tmp, fname.c_str(), size + 1);
+		int err = _mktemp_s(tmp, size + 1);
+		if (err) {
+			delete[] tmp;
+			throw AtomicWrite::FailedAtomicWrite();
+		}
+
+		int fd;
+		while (true) {
+			err = _sopen_s(&fd, tmp, _O_RDWR | _O_CREAT, _SH_DENYNO, _S_IWRITE);
+			if (fd != -1) {
+				break;
+			} else if (fd == -1 && errno != EEXIST) {
+				delete[] tmp;
+				throw AtomicWrite::FailedAtomicWrite();
+			}
+		}
+
+		std::string tmpname(tmp);
+		delete[] tmp;
+		return std::make_pair(fd, tmpname);
 	}
 
-	// rename
 	static void
-	rename_file(std::string oldname, std::string newname)
+		rename_file(std::string oldname, std::string newname)
 	{
-		// TODO should use replace file, but remember that the file to
-		// be replaced must exist already (I think)
-	}
+		// ReplaceFile requires newname already exists, so we have to create it if it doesn't
+		int fd;
+		_sopen_s(&fd, newname.c_str(), _O_RDWR | _O_CREAT, _SH_DENYNO, _S_IWRITE);
+		if (fd != -1) close_file(fd);
 
-	static int
-	parent(std::string fname)
-	{
-		// TODO
+		bool success = ReplaceFile(newname.c_str(), oldname.c_str(), NULL, REPLACEFILE_IGNORE_MERGE_ERRORS, NULL, NULL);
+		if (success == 0) throw AtomicWrite::FailedAtomicWrite();
 	}
 
 #else
 	#error AtomicWrite does not support this platform
 #endif
 
+#if defined(_WIN32)
+void
+AtomicWrite::write(std::string fname, std::string data)
+{
+	std::pair<int, std::string> fd_and_tmpname = make_temporary_file(fname);
+	int fd = fd_and_tmpname.first;
+	std::string tmpname = fd_and_tmpname.second;
+
+	write_out(fd, data);
+	sync(fd);
+	close_file(fd);
+	rename_file(tmpname, fname);
+	// Windows does not appear to need the parent directory flushed to disk
+}
+#else
 void
 AtomicWrite::write(std::string fname, std::string data)
 {
@@ -141,8 +180,9 @@ AtomicWrite::write(std::string fname, std::string data)
 	write_out(fd, data);
 	sync(fd);
 	close_file(fd);
-
 	rename_file(tmpname, fname);
 	sync(parent_fd);
 	close_file(parent_fd);
 }
+#endif
+

@@ -25,11 +25,11 @@ exception if an irrecoverable error is encountered.
 | ------------- | ------------- |
 | Linux		| Yes		|
 | OS X		| Yes		|
+| Windows	| Yes		|
 | OpenBSD	| Untested	|
 | FreeBSD	| Untested	|
 | NetBSD	| Untested	|
 | Dragonfly BSD	| Untested	|
-| Windows	| Unimplemented |
 
 The BSD code is the same as Linux, so it should work in theory, but I have not
 actually run it to see. Some headers may need to be added to get it to compile
