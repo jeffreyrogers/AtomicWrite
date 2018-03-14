@@ -56,7 +56,7 @@
 		}
 		std::string tmpname(tmp);
 		delete[] tmp;
-		return std::make_pair<int, std::string>(fd, tmpname);
+		return std::make_pair(fd, tmpname);
 	}
 
 	static void
