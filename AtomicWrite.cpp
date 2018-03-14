@@ -31,8 +31,14 @@
 	static void
 	write_out(int fd, std::string data)
 	{
-		int err = write(fd, data.c_str(), data.length());
-		if (err == -1) throw AtomicWrite::FailedAtomicWrite();
+		size_t bytes_remaining = data.length();
+		const char * raw_data = data.c_str();
+		while (bytes_remaining > 0) {
+			int bytes_written = write(fd, raw_data, bytes_remaining);
+			if (bytes_written == -1) throw AtomicWrite::FailedAtomicWrite();
+			bytes_remaining -= bytes_written;
+			raw_data += bytes_written;
+		}
 	}
 
 	static void
@@ -98,8 +104,14 @@
 	static void
 	write_out(int fd, std::string data)
 	{
-		int err = _write(fd, data.c_str(), data.length());
-		if (err == -1) throw AtomicWrite::FailedAtomicWrite();
+		size_t bytes_remaining = data.length();
+		const char * raw_data = data.c_str();
+		while (bytes_remaining > 0) {
+			int bytes_written = _write(fd, raw_data, bytes_remaining);
+			if (bytes_written == -1) throw AtomicWrite::FailedAtomicWrite();
+			bytes_remaining -= bytes_written;
+			raw_data += bytes_written;
+		}
 	}
 
 	static void
