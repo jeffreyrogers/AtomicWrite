@@ -1,3 +1,5 @@
 # TODO
 
 - Test on BSD
+- Look into setting owner, group, and protection bits on POSIX systems
+- Test by actually unplugging power
