@@ -1,3 +1,4 @@
+#include <memory>
 #include <utility>
 
 #include "AtomicWrite.h"
@@ -53,15 +54,13 @@
 	{
 		fname.append(".XXXXXX");
 		size_t size = fname.size();
-		char *tmp = new char[size + 1];
-		memcpy(tmp, fname.c_str(), size + 1);
-		int fd = mkstemp(tmp);
+		auto tmp = std::make_unique<char[]>(size + 1);
+		memcpy(tmp.get(), fname.c_str(), size + 1);
+		int fd = mkstemp(tmp.get());
 		if (fd == -1) {
-			delete[] tmp;
 			throw AtomicWrite::FailedAtomicWrite();
 		}
-		std::string tmpname(tmp);
-		delete[] tmp;
+		std::string tmpname(tmp.get());
 		return std::make_pair(fd, tmpname);
 	}
 
@@ -76,10 +75,9 @@
 	parent(std::string fname)
 	{
 		size_t size = fname.size();
-		char *tmp = new char[size + 1];
-		memcpy(tmp, fname.c_str(), size + 1);
-		char *parent = dirname(tmp);
-		delete[] tmp;
+		auto tmp = std::make_unique<char[]>(size + 1);
+		memcpy(tmp.get(), fname.c_str(), size + 1);
+		char *parent = dirname(tmp.get());
 		if (!parent) throw AtomicWrite::FailedAtomicWrite();
 		int fd = open(parent, O_RDONLY);
 		if (fd == -1) {
@@ -126,27 +124,24 @@
 	{
 		fname.append("XXXXXX");
 		size_t size = fname.size();
-		char *tmp = new char[size + 1];
-		memcpy(tmp, fname.c_str(), size + 1);
-		int err = _mktemp_s(tmp, size + 1);
+		auto tmp = std::make_unique<char[]>(size + 1);
+		memcpy(tmp.get(), fname.c_str(), size + 1);
+		int err = _mktemp_s(tmp.get(), size + 1);
 		if (err) {
-			delete[] tmp;
 			throw AtomicWrite::FailedAtomicWrite();
 		}
 
 		int fd;
 		while (true) {
-			err = _sopen_s(&fd, tmp, _O_RDWR | _O_CREAT, _SH_DENYNO, _S_IWRITE);
+			err = _sopen_s(&fd, tmp.get(), _O_RDWR | _O_CREAT, _SH_DENYNO, _S_IWRITE);
 			if (fd != -1) {
 				break;
 			} else if (fd == -1 && errno != EEXIST) {
-				delete[] tmp;
 				throw AtomicWrite::FailedAtomicWrite();
 			}
 		}
 
-		std::string tmpname(tmp);
-		delete[] tmp;
+		std::string tmpname(tmp.get());
 		return std::make_pair(fd, tmpname);
 	}
 

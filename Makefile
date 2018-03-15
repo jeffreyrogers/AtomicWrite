@@ -6,7 +6,7 @@ check:
 else
 .PHONY: check
 check:
-	clang++ -o check -O3 check.cpp AtomicWrite.cpp
+	clang++ -o check -std=c++14 -O3 check.cpp AtomicWrite.cpp
 	./check
 endif
 
