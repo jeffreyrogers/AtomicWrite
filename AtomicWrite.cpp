@@ -19,6 +19,7 @@
 	#include <errno.h>
 	#include <fcntl.h>
 	#include <libgen.h>
+	#include <sys/stat.h>
 	#include <unistd.h>
 
 	static void
@@ -68,8 +69,22 @@
 	static void
 	rename_file(std::string oldname, std::string newname)
 	{
-		int err = rename(oldname.c_str(), newname.c_str());
+		auto have_mode = false;
+		mode_t mode;
+		struct stat s;
+		int err = stat(newname.c_str(), &s);
+		if (!err) {
+			have_mode = true;
+			mode = s.st_mode;
+		}
+
+		err = rename(oldname.c_str(), newname.c_str());
 		if (err) throw AtomicWrite::FailedAtomicWrite();
+
+		if (have_mode) {
+			err = chmod(newname.c_str(), mode);
+			if (err) throw AtomicWrite::FailedAtomicWrite();
+		}
 	}
 
 	static int
