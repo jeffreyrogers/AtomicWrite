@@ -69,20 +69,19 @@
 	static void
 	rename_file(std::string oldname, std::string newname)
 	{
-		auto have_mode = false;
-		mode_t mode;
-		struct stat s;
-		int err = stat(newname.c_str(), &s);
-		if (!err) {
-			have_mode = true;
-			mode = s.st_mode;
-		}
-
-		err = rename(oldname.c_str(), newname.c_str());
+		int err = rename(oldname.c_str(), newname.c_str());
 		if (err) throw AtomicWrite::FailedAtomicWrite();
+	}
 
-		if (have_mode) {
-			err = chmod(newname.c_str(), mode);
+	// set_permissions copies the permissions from the file given by fname to
+	// the file given by fd. If fname doesn't exist, just return.
+	static void
+	set_permissions(int fd, std::string fname)
+	{
+		struct stat s;
+		int err = stat(fname.c_str(), &s);
+		if (!err) {
+			err = fchmod(fd, s.st_mode);
 			if (err) throw AtomicWrite::FailedAtomicWrite();
 		}
 	}
@@ -205,6 +204,7 @@ AtomicWrite::write(std::string fname, std::string data)
 	std::string tmpname = fd_and_tmpname.second;
 
 	write_out(fd, data);
+	set_permissions(fd, fname);
 	sync(fd);
 	close_file(fd);
 	rename_file(tmpname, fname);
